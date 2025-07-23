@@ -503,7 +503,18 @@ export class FunctionsRegistry {
   async unzipFunction(func: NetlifyFunction) {
     const targetDirectory = resolve(this.projectRoot, this.destPath, '.unzipped', func.name)
 
-    await extractZip(func.mainFile, { dir: targetDirectory })
+    // Validate each entry's path to prevent Zip Slip
+    await extractZip(func.mainFile, {
+      dir: targetDirectory,
+      onEntry: (entry, zipfile) => {
+        const entryPath = entry.fileName
+        const resolvedPath = resolve(targetDirectory, entryPath)
+
+        if (!resolvedPath.startsWith(targetDirectory + '/')) {
+          throw new Error(`Illegal file path detected in zip: ${entryPath}`)
+        }
+      },
+    })
 
     return targetDirectory
   }
