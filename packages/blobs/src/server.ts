@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto'
+import { createHmac, randomBytes } from 'node:crypto'
 import { createReadStream, promises as fs } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 
@@ -78,9 +78,8 @@ export class BlobsServer {
     this.logger = logger ?? console.log
     this.onRequest = onRequest
     this.token = token
-    this.tokenHash = createHmac('sha256', Math.random.toString())
-      .update(token ?? Math.random.toString())
-      .digest('hex')
+    const key = token ?? randomBytes(32).toString('hex')
+    this.tokenHash = createHmac('sha256', key).digest('hex')
   }
 
   private dispatchOnRequestEvent(type: Operation, input: string | URL) {
@@ -591,3 +590,4 @@ export class BlobsServer {
     return this.server?.stop()
   }
 }
+
