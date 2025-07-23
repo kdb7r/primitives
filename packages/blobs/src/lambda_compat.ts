@@ -10,7 +10,14 @@ interface BlobsEventData {
 
 export const connectLambda = (event: LambdaEvent) => {
   const rawData = base64Decode(event.blobs)
-  const data = JSON.parse(rawData) as BlobsEventData
+  let data: BlobsEventData
+  try {
+    data = JSON.parse(rawData) as BlobsEventData
+  } catch {
+    // If JSON parsing fails, do not proceed to set environment context
+    return
+  }
+
   const environmentContext: EnvironmentContext = {
     deployID: event.headers['x-nf-deploy-id'],
     edgeURL: data.url,
@@ -20,3 +27,4 @@ export const connectLambda = (event: LambdaEvent) => {
 
   setEnvironmentContext(environmentContext)
 }
+
