@@ -42,10 +42,16 @@ const getDelay = (rateLimitReset?: string | null) => {
     return DEFAULT_RETRY_DELAY
   }
 
-  return Math.max(Number(rateLimitReset) * 1000 - Date.now(), MIN_RETRY_DELAY)
+  const resetTime = Number(rateLimitReset)
+  if (isNaN(resetTime) || resetTime <= 0) {
+    return DEFAULT_RETRY_DELAY
+  }
+
+  return Math.max(resetTime * 1000 - Date.now(), MIN_RETRY_DELAY)
 }
 
 const sleep = (ms: number) =>
   new Promise((resolve) => {
     setTimeout(resolve, ms)
   })
+
