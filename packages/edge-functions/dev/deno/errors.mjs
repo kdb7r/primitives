@@ -4,15 +4,8 @@
  * @param {unknown} error
  */
 export const getErrorResponse = (error) => {
-  const errorData =
-    error instanceof Error
-      ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          cause: String(error.cause),
-        }
-      : String(error)
+  // Sanitize error output to avoid exposing sensitive internal details
+  const errorData = typeof error === 'string' ? error : 'Internal Server Error'
 
   return Response.json(
     {
