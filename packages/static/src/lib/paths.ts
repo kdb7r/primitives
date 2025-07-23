@@ -3,13 +3,26 @@ import path from 'node:path'
 // Used as an optimization to avoid dual lookups for missing assets
 const assetExtensionRegExp = /\.(html?|png|jpg|js|css|svg|gif|ico|woff|woff2)$/
 
+// Helper function to ensure resolved path is within base directory
+const isPathInsideBase = (resolvedPath: string, baseDirectory: string) => {
+  const relative = path.relative(baseDirectory, resolvedPath)
+  // path.relative returns a path starting with '..' if resolvedPath is outside baseDirectory
+  return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative)
+}
+
 export const getFilePathsForURL = (pathname: string, baseDirectory = '') => {
   const urlVariations = getURLVariations(pathname)
   const possiblePaths = urlVariations.map((urlVariation) => {
     const parts = urlVariation.split('/').filter(Boolean)
+    const resolvedPath = path.resolve(baseDirectory, ...parts)
 
-    return path.resolve.apply(null, [baseDirectory, ...parts])
-  })
+    if (!isPathInsideBase(resolvedPath, baseDirectory)) {
+      // If path traversal detected, ignore this path
+      return null
+    }
+
+    return resolvedPath
+  }).filter(Boolean) as string[]
 
   return possiblePaths
 }
