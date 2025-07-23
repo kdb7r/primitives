@@ -9,6 +9,11 @@ import {
 
 export const ONE_YEAR = 60 * 24 * 365
 
+// Helper function to sanitize header values by removing CR and LF characters
+const sanitizeHeaderValue = (value: string): string => {
+  return value.replace(/[\r\n]/g, '')
+}
+
 export const cacheHeaders = (cacheSettings: CacheSettings) => {
   const { durable, overrideDeployRevalidation: id, tags, ttl, swr, vary } = cacheSettings
   const headers: Record<string, string> = {}
@@ -65,26 +70,31 @@ const getNetlifyVary = (varyOptions?: VaryOptions) => {
   const directives: string[] = []
 
   if (cookie) {
-    directives.push(`cookie=${requireArrayOfStrings('cookie', ensureArray(cookie)).join('|')}`)
+    const cookieValues = requireArrayOfStrings('cookie', ensureArray(cookie)).map(sanitizeHeaderValue)
+    directives.push(`cookie=${cookieValues.join('|')}`)
   }
 
   if (country) {
-    directives.push(`country=${requireArrayOfStringsWithNesting('country', ensureArray(country), '+').join('|')}`)
+    const countryValues = requireArrayOfStringsWithNesting('country', ensureArray(country), '+').map(sanitizeHeaderValue)
+    directives.push(`country=${countryValues.join('|')}`)
   }
 
   if (header) {
-    directives.push(`header=${requireArrayOfStrings('header', ensureArray(header)).join('|')}`)
+    const headerValues = requireArrayOfStrings('header', ensureArray(header)).map(sanitizeHeaderValue)
+    directives.push(`header=${headerValues.join('|')}`)
   }
 
   if (language) {
-    directives.push(`language=${requireArrayOfStringsWithNesting('language', ensureArray(language), '+').join('|')}`)
+    const languageValues = requireArrayOfStringsWithNesting('language', ensureArray(language), '+').map(sanitizeHeaderValue)
+    directives.push(`language=${languageValues.join('|')}`)
   }
 
   if (query) {
     if (query === true) {
       directives.push(`query`)
     } else {
-      directives.push(`query=${requireArrayOfStrings('query', ensureArray(query)).join('|')}`)
+      const queryValues = requireArrayOfStrings('query', ensureArray(query)).map(sanitizeHeaderValue)
+      directives.push(`query=${queryValues.join('|')}`)
     }
   }
 
@@ -116,3 +126,4 @@ export const setCacheHeaders = (response: Response, cacheSettings: CacheSettings
 
   return newResponse
 }
+
